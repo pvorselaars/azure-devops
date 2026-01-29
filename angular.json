@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "azure-devops-pr": {
+    "azure-devops": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -25,7 +25,7 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles/semantic.css"
             ]
           },
           "configurations": {
@@ -56,10 +56,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "azure-devops-pr:build:production"
+              "buildTarget": "azure-devops:build:production"
             },
             "development": {
-              "buildTarget": "azure-devops-pr:build:development"
+              "buildTarget": "azure-devops:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -1,0 +1,43 @@
+export interface PullRequest {
+    pullRequestId: number
+    title: string
+    description: string
+    createdBy: {
+        displayName: string
+        _links: {
+            avatar: {
+                href: string
+            }
+        }
+    }
+    creationDate: string
+    closedDate?: string
+    status: string
+    sourceRefName: string
+    reviewers: [{
+        displayName: string
+        vote: number
+    }]
+    approvals?: {
+        received: number
+        required: number
+        complete: number
+    }
+    build?: string
+    lastMergeSourceCommit: {
+        commitId: string;
+    }
+    lastMergeTargetCommit: {
+        commitId: string
+    }
+    iterations?: number
+    repository: {
+        id: string
+        name: string
+        project: {
+            id: string
+            name: string
+        }
+    }
+    url: string
+}

@@ -1,0 +1,3 @@
+[submodule "src/styles"]
+	path = src/styles
+	url = git@github.com:pvorselaars/semantic.css
