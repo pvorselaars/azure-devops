@@ -13,7 +13,9 @@ export interface PullRequest {
     creationDate: string
     closedDate?: string
     status: string
+    isDraft: boolean
     sourceRefName: string
+    targetRefName: string
     reviewers: [{
         displayName: string
         vote: number

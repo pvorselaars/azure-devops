@@ -8,7 +8,7 @@ export class MarkdownPipe implements PipeTransform {
   constructor(private readonly sanitizer: DomSanitizer) {}
 
   async transform(md: string): Promise<SafeHtml> {
-    const html = await marked.parse(md ?? '');
+    const html = await marked.parse(md || '', { breaks: true });
     const clean = DOMPurify.sanitize(html);
     return this.sanitizer.bypassSecurityTrustHtml(clean);
   }

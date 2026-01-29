@@ -54,11 +54,19 @@ import { AsyncPipe } from '@angular/common';
         @for (pr of pullRequests; track pr.pullRequestId) {
         <tr (click)="selected === pr ? selected = undefined : selected = pr"
             [class.selected]="selected === pr"
-            [class.success]="pr.build === 'passing' && pr.approvals?.complete === 1"
+            [class.success]="pr.build === 'passing' && pr.approvals?.complete === 1 && !pr.isDraft"
+            [class.draft]="pr.isDraft"
             style="cursor: pointer;"
             >
           <td>{{ pr.pullRequestId }}</td>
-          <td><a (click)="goto(pr.repository, pr.pullRequestId)">{{ pr.title }}</a></td>
+          <td>
+            <a (click)="goto(pr.repository, pr.pullRequestId)">
+              {{ pr.title }}
+              @if (pr.isDraft) {
+                <span class="material-symbols-outlined info" title="Draft">design_services</span>
+              }
+            </a>
+          </td>
           <td>
             <img [src]="pr.createdBy._links.avatar.href"
                  alt="{{ pr.createdBy.displayName }}"
@@ -85,13 +93,16 @@ import { AsyncPipe } from '@angular/common';
             @else if (pr.build === 'pending') {
               <span class="material-symbols-outlined info">hourglass_top</span>
             }
+            @else if (pr.build === 'expired') {
+              <span class="material-symbols-outlined warning">schedule</span>
+            }
             @else {
               <span class="material-symbols-outlined danger">error</span>
             }
           </td>
         </tr>
           @if (selected?.pullRequestId === pr.pullRequestId) {
-          <tr>
+          <tr (click)="selected = undefined" style="cursor: pointer;">
             <td colspan="6">
               <div [innerHtml]="selected!.description | markdown | async"></div>
             </td>
@@ -105,6 +116,7 @@ import { AsyncPipe } from '@angular/common';
     th { cursor: pointer; vertical-align: middle; text-align: left; }
     .material-symbols-outlined { font-size: 20px; line-height: 1; vertical-align: middle; }
 
+    .draft { filter: brightness(50%); }
     tr.selected { border-bottom: none; }
   `,
   imports: [MarkdownPipe, AsyncPipe],

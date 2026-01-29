@@ -3,7 +3,7 @@ import { AsyncPipe } from '@angular/common';
 import { PrTable } from "./components/pr-table";
 import { PrService } from '../../services/pr.service';
 import { PullRequest } from '../../../model/pr';
-import { Observable } from 'rxjs';
+import { interval, Observable, shareReplay, startWith, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-pr-overview',
@@ -25,7 +25,11 @@ export class PrOverview {
   protected openPullRequests$: Observable<PullRequest[]>;
 
   constructor(private readonly prService: PrService) {
-    this.openPullRequests$ = this.prService.getOpenPullRequests();
+    this.openPullRequests$ = interval(60_000).pipe(
+      startWith(0),
+      switchMap(() => this.prService.getOpenPullRequests()),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
 }

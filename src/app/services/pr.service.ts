@@ -20,7 +20,7 @@ export class PrService {
       map(response => response.value || []),
       switchMap(prs => {
         if (!prs.length) return of([]);
-        const buildStatusObservables = prs.map(pr => this.buildService.getBuildStatus(pr.pullRequestId));
+        const buildStatusObservables = prs.map(pr => this.buildService.getBuildStatus(pr));
         return forkJoin(buildStatusObservables).pipe(
           map(buildStatuses =>
             prs.map((pr, idx) => {
