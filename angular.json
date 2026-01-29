@@ -42,7 +42,9 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "baseHref": "/azure-devops/",
+              "deployUrl": "/azure-devops/"
             },
             "development": {
               "optimization": false,
