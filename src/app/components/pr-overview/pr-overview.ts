@@ -18,7 +18,7 @@ import { interval, Observable, shareReplay, startWith, switchMap } from 'rxjs';
     } @else {
     <app-pr-table [pullRequests]="pullRequests" />
     }
-  `,
+  `
 })
 export class PrOverview {
 

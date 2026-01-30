@@ -36,13 +36,13 @@ export const appConfig: ApplicationConfig = {
       <dialog open>
         <form [formGroup]="configForm" (ngSubmit)="save()">
           <h1>Please configure your Azure DevOps settings</h1>
+          <small>You can create a <a href="https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops" target="_blank">PAT</a>. Make sure it has at least "Code (Read)" and "Build (Read)" permissions.</small>
           <fieldset>
             <input type="text" formControlName="org" placeholder="Organization" />
             <input type="text" formControlName="proj" placeholder="Project" />
             <input type="password" formControlName="pat" placeholder="Personal Access Token" />
             <button type="submit" [disabled]="configForm.invalid">Save</button>
           </fieldset>
-          <small>You can create a <a href="https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops" target="_blank">PAT</a>. Make sure it has at least "Code (Read)" and "Build (Read)" permissions.</small>
         </form>
       </dialog>
     }
