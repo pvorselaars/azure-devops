@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { PullRequest } from '../../../../model/pr';
 import { MarkdownPipe } from "../../../pipes/markdown.pipe";
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-pr-table',
@@ -14,6 +14,7 @@ import { AsyncPipe } from '@angular/common';
               <span class="material-symbols-outlined">
                 {{ sortDirection === 1 ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
               </span>
+            
             }
           </th>
           <th (click)="toggleSort('title', 'string')">
@@ -40,6 +41,14 @@ import { AsyncPipe } from '@angular/common';
               </span>
             }
           </th>
+          <th (click)="toggleSort('comments', 'number')">
+            Comments
+            @if (sortColumn === 'comments') {
+              <span class="material-symbols-outlined">
+                {{ sortDirection === 1 ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+              </span>
+            }
+          </th>
           <th (click)="toggleSort('approvals.complete', 'number')">
             Approvals
               @if (sortColumn === 'approvals.complete') {
@@ -48,19 +57,19 @@ import { AsyncPipe } from '@angular/common';
                 </span>
               }
           </th>
-          <th (click)="toggleSort('build', 'string')">Build</th>
+          <th (click)="toggleSort('passRate', 'number')">Policies</th>
       </thead>
       <tbody>
         @for (pr of pullRequests; track pr.pullRequestId) {
         <tr (click)="selected === pr ? selected = undefined : selected = pr"
             [class.selected]="selected === pr"
-            [class.success]="pr.build === 'passing' && pr.approvals?.complete === 1 && !pr.isDraft"
+            [class.success]="pr.passRate === 1 && !pr.isDraft"
             [class.draft]="pr.isDraft"
             style="cursor: pointer;"
             >
           <td>{{ pr.pullRequestId }}</td>
           <td>
-            <a (click)="goto(pr.repository, pr.pullRequestId)">
+            <a (click)="goto($event, pr.repository, pr.pullRequestId)">
               {{ pr.title }}
               @if (pr.isDraft) {
                 <span class="material-symbols-outlined info" title="Draft">design_services</span>
@@ -69,13 +78,13 @@ import { AsyncPipe } from '@angular/common';
           </td>
           <td>
             <img [src]="pr.createdBy._links.avatar.href"
-                 alt="{{ pr.createdBy.displayName }}"
                  width="24" height="24"
                  style="vertical-align: middle; border-radius: 50%; margin-right: 4px;"
             />
             {{ pr.createdBy.displayName }}
           </td>
           <td>{{ pr.repository.name }}</td>
+          <td>{{ pr.comments }}</td>
             @if (pr.approvals) {
             <td>{{ pr.approvals.received }} / {{ pr.approvals.required }} 
               @if (pr.approvals.received === pr.approvals.required && pr.approvals.required !== 0) {
@@ -87,24 +96,41 @@ import { AsyncPipe } from '@angular/common';
               <td>~</td>
             }
           <td>
-            @if (pr.build === 'passing') {
-              <span class="material-symbols-outlined success">check_circle</span>
-            }
-            @else if (pr.build === 'pending') {
-              <span class="material-symbols-outlined info">hourglass_top</span>
-            }
-            @else if (pr.build === 'expired') {
-              <span class="material-symbols-outlined warning">schedule</span>
-            }
-            @else {
-              <span class="material-symbols-outlined danger">error</span>
+            @for (status of pr.policies ?? []; track status.evaluationId) {
+              @if (status.status === 'approved') {
+                <span class="material-symbols-outlined success" [class.nonblocking]="!status.configuration.isBlocking" title="{{status.configuration.type.displayName}}">check_circle</span>
+              }
+              @else if (status.status === 'rejected') {
+                <span class="material-symbols-outlined danger" [class.nonblocking]="!status.configuration.isBlocking" title="{{status.configuration.type.displayName}}">error</span>
+              }
+              @else if (status.status === 'running' || status.status === 'queued') {
+                <span class="material-symbols-outlined info" [class.nonblocking]="!status.configuration.isBlocking" title="{{status.configuration.type.displayName}}">hourglass_top</span>
+              }
             }
           </td>
         </tr>
-          @if (selected?.pullRequestId === pr.pullRequestId) {
+          @if (selected && selected.pullRequestId === pr.pullRequestId) {
           <tr (click)="selected = undefined" style="cursor: pointer;">
             <td colspan="6">
+              <strong>Description</strong><br/>
               <div [innerHtml]="selected!.description | markdown | async"></div>
+              @let rejectedPolicies = getRejectedPolicies(selected);
+              @if (rejectedPolicies.length > 0) {
+                <hr/>
+                <strong>Policies</strong><br/>
+                <ul>
+                @for (status of rejectedPolicies; track status.evaluationId) {
+                  <li class="danger">{{ status.configuration.type.displayName }}</li>
+                  @if (status.context?.buildDefinitionName) {
+                    <span class="danger"><a href="https://dev.azure.com/{{ org }}/{{ pr.repository.project.id }}/_build/results?buildId={{ status.context.buildId }}" target="_blank" rel="noopener">
+                      {{ status.context.buildDefinitionName }}: {{ status.context.buildOutputPreview!.jobName }} / {{ status.context.buildOutputPreview!.taskName }}:</a></span>
+                    @for (error of status.context.buildOutputPreview!.errors; track error.message) {
+                      <div class="danger">- {{ error.message }}</div>
+                    }
+                  }
+                }
+                </ul>
+              }
             </td>
           </tr>
           }
@@ -118,10 +144,13 @@ import { AsyncPipe } from '@angular/common';
 
     .draft { filter: brightness(50%); }
     tr.selected { border-bottom: none; }
+    span.nonblocking { opacity: 0.5; }
   `,
   imports: [MarkdownPipe, AsyncPipe],
 })
 export class PrTable {
+
+  protected readonly org = localStorage.getItem('azureDevOpsOrg');
 
   @Input()
   pullRequests: PullRequest[] = [];
@@ -166,10 +195,15 @@ export class PrTable {
     });
   }
 
-  protected goto(repository: { id: string; name: string, project: { id: string; name: string } }, pullRequestId: number): void {
+  protected goto(event: Event, repository: { id: string; name: string, project: { id: string; name: string } }, pullRequestId: number): void {
+    event.stopPropagation();
     const url = `https://dev.azure.com/cito-ivit/${encodeURIComponent(repository.project.name)}/_git/${repository.name}/pullrequest/${pullRequestId}`;
     const w = window.open(url, '_blank');
     if (w) w.opener = null;
+  }
+
+  protected getRejectedPolicies(pr: PullRequest | undefined) {
+    return pr?.policies?.filter(p => p.status === 'rejected') ?? [];
   }
 
 }

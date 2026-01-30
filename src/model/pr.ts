@@ -1,3 +1,5 @@
+import { PolicyEvaluationRecord } from "./evaluation"
+
 export interface PullRequest {
     pullRequestId: number
     title: string
@@ -25,7 +27,9 @@ export interface PullRequest {
         required: number
         complete: number
     }
-    build?: string
+    policies?: PolicyEvaluationRecord[]
+    comments?: number
+    passRate?: number
     lastMergeSourceCommit: {
         commitId: string;
     }
