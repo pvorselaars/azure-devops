@@ -1,10 +1,10 @@
-# [Azure DevOps Overview](https://pvorselaars.github.io/azure-devops/pull-requests)
+# [Azure DevOps Overview](https://pvorselaars.github.io/azure-devops)
 
 Simple alternative UI for [Azure DevOps](https://dev.azure.com). Uses your read only Personal Access Token (PAT) to create a succint status overview of PR's.
 
 ## 🚀 Getting started
 
-[Preview online](https://pvorselaars.github.io/azure-devops/pull-requests) or run locally:
+[Preview online](https://pvorselaars.github.io/azure-devops) or run locally:
 
 ```bash
 git clone https://github.com/pvorselaars/azure-devops.git

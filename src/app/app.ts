@@ -7,7 +7,10 @@ import { filter } from 'rxjs';
 
 export const routes: Routes = [
   {
-    path: 'pull-requests', component: PrOverview, data: { title: 'Open Pull Requests' }
+    path: 'pull-requests', component: PrOverview, data: { title: 'Open Pull Requests' },
+  },
+  {
+    path: '**', redirectTo: 'pull-requests'
   }
 ];
 
