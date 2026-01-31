@@ -48,6 +48,7 @@ export const appConfig: ApplicationConfig = {
     }
     @if (token){
       <nav>
+        <span>Open Pull Requests</span>
         <span class="material-symbols-outlined" style="cursor: pointer;" title="Toggle dark mode" (click)="toogleDarkMode()">moon_stars</span>
         <span class="material-symbols-outlined" style="cursor: pointer;" title="Reconfigure" (click)="reset()">settings</span>
       </nav>
@@ -56,19 +57,17 @@ export const appConfig: ApplicationConfig = {
   `,
   styles: `
     nav {
-      position: fixed;
       top: 1rem;
-      left: 0;
-      right: 0;
-      padding: 0 1rem;
+      padding: 1rem;
       justify-content: flex-end;
       display: flex;
       align-items: center;
-      z-index: 1000;
+      gap: 0.5rem;
     }
 
-    span.material-symbols-outlined {
-      margin-left: 1rem;
+    nav span:first-child {
+      margin-right: auto;
+      font-weight: bold;
     }
 
   `

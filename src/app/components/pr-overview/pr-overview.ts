@@ -9,7 +9,6 @@ import { interval, Observable, shareReplay, startWith, switchMap } from 'rxjs';
   selector: 'app-pr-overview',
   imports: [PrTable, AsyncPipe],
   template: `
-    <h1>Open Pull Requests</h1>
     @let pullRequests = openPullRequests$ | async;
     @if (!pullRequests) {
       <progress></progress>
