@@ -77,10 +77,6 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
             </a>
           </td>
           <td>
-            <img [src]="pr.createdBy._links.avatar.href"
-                 width="24" height="24"
-                 style="vertical-align: middle; border-radius: 50%; margin-right: 4px;"
-            />
             {{ pr.createdBy.displayName }}
           </td>
           <td>{{ pr.repository.name }}</td>
