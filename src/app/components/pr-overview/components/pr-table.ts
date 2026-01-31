@@ -1,11 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { PullRequest } from '../../../../model/pr';
 import { MarkdownPipe } from "../../../pipes/markdown.pipe";
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-pr-table',
   template: `
+    <input type="search" placeholder="Search pull requests..." (input)="searchTerm = $event.target.value.toLowerCase()" />
     <table>
       <thead>
           <th (click)="toggleSort('pullRequestId', 'number')">
@@ -60,7 +61,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
           <th (click)="toggleSort('passRate', 'number')">Policies</th>
       </thead>
       <tbody>
-        @for (pr of pullRequests; track pr.pullRequestId) {
+        @for (pr of searchResults; track pr.pullRequestId) {
         <tr (click)="selected === pr ? selected = undefined : selected = pr"
             [class.selected]="selected === pr"
             [class.success]="pr.passRate === 1 && !pr.isDraft"
@@ -134,7 +135,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
     th { cursor: pointer; vertical-align: middle; text-align: left; }
     .material-symbols-outlined { font-size: 20px; line-height: 1; vertical-align: middle; }
 
-    .draft { filter: brightness(50%); }
+    .draft { filter: invert(50%); }
     tr.selected { border-bottom: none; }
     span.nonblocking { opacity: 0.5; }
   `,
@@ -151,6 +152,17 @@ export class PrTable {
   protected sortDirection: 1 | -1 = 1;
 
   protected selected?: PullRequest;
+
+  protected searchTerm: string = '';
+
+  protected get searchResults(): PullRequest[] {
+    return this.pullRequests.filter(pr =>
+      pr.title.toLowerCase().includes(this.searchTerm) ||
+      pr.createdBy.displayName.toLowerCase().includes(this.searchTerm) ||
+      pr.repository.name.toLowerCase().includes(this.searchTerm) ||
+      String(pr.pullRequestId).includes(this.searchTerm)
+    );
+  }
 
   protected toggleSort(column: string, type: string): void {
     if (this.sortColumn === column) {
