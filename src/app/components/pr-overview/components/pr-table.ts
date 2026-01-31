@@ -82,11 +82,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
           <td>{{ pr.repository.name }}</td>
           <td>{{ pr.comments }}</td>
             @if (pr.approvals) {
-            <td>{{ pr.approvals.received }} / {{ pr.approvals.required }} 
-              @if (pr.approvals.received === pr.approvals.required && pr.approvals.required !== 0) {
-              <span class="material-symbols-outlined success">thumb_up</span>
-              }
-            </td>
+            <td>{{ pr.approvals.received }} / {{ pr.approvals.required }} </td>
             }
             @else {
               <td>~</td>
@@ -107,12 +103,12 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
         </tr>
           @if (selected && selected.pullRequestId === pr.pullRequestId) {
           <tr (click)="selected = undefined" style="cursor: pointer;">
+            <td></td>
             <td colspan="6">
               <strong>Description</strong><br/>
               <div [innerHtml]="selected!.description | markdown | async"></div>
               @let rejectedPolicies = getRejectedPolicies(selected);
               @if (rejectedPolicies.length > 0) {
-                <hr/>
                 <strong>Policies</strong><br/>
                 <ul>
                 @for (status of rejectedPolicies; track status.evaluationId) {
@@ -193,7 +189,7 @@ export class PrTable {
 
   protected goto(event: Event, repository: { id: string; name: string, project: { id: string; name: string } }, pullRequestId: number): void {
     event.stopPropagation();
-    const url = `https://dev.azure.com/cito-ivit/${encodeURIComponent(repository.project.name)}/_git/${repository.name}/pullrequest/${pullRequestId}`;
+    const url = `https://dev.azure.com/${this.org}/${encodeURIComponent(repository.project.name)}/_git/${repository.name}/pullrequest/${pullRequestId}`;
     const w = window.open(url, '_blank');
     if (w) w.opener = null;
   }

@@ -2,10 +2,11 @@ import { HttpHandlerFn, HttpRequest, provideHttpClient, withInterceptors } from 
 import { ApplicationConfig, Component, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, RouterOutlet, Routes } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { PrOverview } from './components/pr-overview/pr-overview';
 
 export const routes: Routes = [
   {
-    path: '', loadComponent: () => import('./components/pr-overview/pr-overview').then(m => m.PrOverview)
+    path: '', component: PrOverview
   }
 ];
 
