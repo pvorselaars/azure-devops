@@ -1,3 +1,4 @@
+import { Environment } from "./environment"
 import { PolicyEvaluationRecord } from "./evaluation"
 
 export interface PullRequest {
@@ -30,10 +31,14 @@ export interface PullRequest {
     policies?: PolicyEvaluationRecord[]
     comments?: number
     passRate?: number
+    environments?: Environment[]
     lastMergeSourceCommit: {
         commitId: string;
     }
     lastMergeTargetCommit: {
+        commitId: string
+    }
+    lastMergeCommit?: {
         commitId: string
     }
     iterations?: number

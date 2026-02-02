@@ -39,5 +39,6 @@ export class Settings {
     this.configService.org = org;
     this.configService.project = proj;
     this.configService.configuring = false;
+    this.configService.auth = btoa(`:${pat}`);
   }
 }

@@ -33,6 +33,14 @@ import { AsyncPipe } from '@angular/common';
               </span>
             }
           </th>
+          <th (click)="toggleSort('environments.length', 'number')">
+            Environments
+            @if (sortColumn === 'environments.length') {
+              <span class="material-symbols-outlined">
+                {{ sortDirection === 1 ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+              </span>
+            }
+          </th>
           <th (click)="toggleSort('repository.name', 'string')">
             Repository
             @if (sortColumn === 'repository.name') {
@@ -78,6 +86,11 @@ import { AsyncPipe } from '@angular/common';
           </td>
           <td>
             {{ pr.createdBy.displayName }}
+          </td>
+          <td>
+            @for (env of pr.environments ?? []; track env.id) {
+              {{ env.name }}<br/>
+            }
           </td>
           <td>{{ pr.repository.name }}</td>
           <td>{{ pr.comments }}</td>
@@ -160,6 +173,7 @@ export class PrTable {
       pr.title.toLowerCase().includes(this.searchTerm) ||
       pr.createdBy.displayName.toLowerCase().includes(this.searchTerm) ||
       pr.repository.name.toLowerCase().includes(this.searchTerm) ||
+      pr.environments?.some(env => env.name.toLowerCase().includes(this.searchTerm)) ||
       String(pr.pullRequestId).includes(this.searchTerm)
     );
   }

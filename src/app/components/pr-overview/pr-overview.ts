@@ -12,7 +12,7 @@ import { DeploymentService } from '../../services/deployment.service';
   template: `
     @let openPullRequests = openPullRequests$ | async;
     <input type="search" placeholder="Search pull requests..." (input)="searchTerm = $event.target.value.toLowerCase()" />
-    <h2>Open Pull Requests</h2>
+    <h2>Open</h2>
     @if (!openPullRequests) {
       <progress></progress>
     } @else if (openPullRequests.length === 0) {
@@ -22,7 +22,7 @@ import { DeploymentService } from '../../services/deployment.service';
     }
 
     @let completedPullRequests = completedPullRequests$ | async;
-    <h2>Completed Pull Requests</h2>
+    <h2>Completed</h2>
     @if (!completedPullRequests) {
       <progress></progress>
     } @else if (completedPullRequests.length === 0) {
@@ -48,13 +48,13 @@ export class PrOverview {
   constructor(private readonly prs: PrService, private readonly deployments: DeploymentService) {
     this.openPullRequests$ = interval(60_000).pipe(
       startWith(0),
-      switchMap(() => this.prs.getPullRequests()),
+      switchMap(() => this.prs.getOpenPullRequests()),
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.completedPullRequests$ = interval(60_000).pipe(
       startWith(0),
-      switchMap(() => this.prs.getPullRequests('completed')),
+      switchMap(() => this.prs.getCompletedPullRequests()),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
