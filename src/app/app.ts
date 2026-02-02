@@ -1,7 +1,7 @@
 import { HttpHandlerFn, HttpRequest, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, Component, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { NavigationEnd, provideRouter, Router, RouterOutlet, Routes } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { PrOverview } from './components/pr-overview/pr-overview';
 import { filter } from 'rxjs';
 import { ConfigService } from './services/config.service';
@@ -9,7 +9,7 @@ import { Settings } from "./components/settings/settings";
 
 export const routes: Routes = [
   {
-    path: 'pull-requests', component: PrOverview, data: { title: 'Open Pull Requests' },
+    path: 'pull-requests', component: PrOverview, data: { title: 'Pull Requests' },
   },
   {
     path: '**', redirectTo: 'pull-requests'

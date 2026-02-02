@@ -13,8 +13,10 @@ export class PrService {
 
   constructor(private readonly http: HttpClient, private readonly configService: ConfigService) {}
 
-  getOpenPullRequests(): Observable<PullRequest[]> {
-    const url = `https://dev.azure.com/${this.configService.org}/${this.configService.project}/_apis/git/pullrequests?searchCriteria.status=active&api-version=7.1`;
+
+
+  getPullRequests(status: 'active' | 'completed' = 'active' ): Observable<PullRequest[]> {
+    const url = `https://dev.azure.com/${this.configService.org}/${this.configService.project}/_apis/git/pullrequests?searchCriteria.status=${status}&api-version=7.1`;
     return this.http.get<{ value: PullRequest[] }>(url).pipe(
       map(response => response.value ?? []),
       switchMap(prs => (prs.length ? this.enrich(prs) : of([]))),

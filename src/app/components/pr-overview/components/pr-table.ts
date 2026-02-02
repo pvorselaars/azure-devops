@@ -6,7 +6,6 @@ import { AsyncPipe } from '@angular/common';
 @Component({
   selector: 'app-pr-table',
   template: `
-    <input type="search" placeholder="Search pull requests..." (input)="searchTerm = $event.target.value.toLowerCase()" />
     <table>
       <thead>
           <th (click)="toggleSort('pullRequestId', 'number')">
@@ -64,7 +63,7 @@ import { AsyncPipe } from '@angular/common';
         @for (pr of searchResults; track pr.pullRequestId) {
         <tr (click)="selected === pr ? selected = undefined : selected = pr"
             [class.selected]="selected === pr"
-            [class.success]="pr.passRate === 1 && !pr.isDraft"
+            [class.success]="pr.passRate === 1 && !pr.isDraft && pr.status !== 'completed'"
             [class.draft]="pr.isDraft"
             style="cursor: pointer;"
             >
@@ -153,7 +152,8 @@ export class PrTable {
 
   protected selected?: PullRequest;
 
-  protected searchTerm: string = '';
+  @Input()
+  searchTerm: string = '';
 
   protected get searchResults(): PullRequest[] {
     return this.pullRequests.filter(pr =>
