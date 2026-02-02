@@ -3,19 +3,18 @@ import { HttpClient } from '@angular/common/http';
 import { PullRequest } from '../../model/pr';
 import { catchError, map, Observable, of, switchMap, forkJoin } from 'rxjs';
 import { PolicyEvaluationRecord } from '../../model/evaluation';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PrService {
 
-  private readonly org = localStorage.getItem('azureDevOpsOrg');
-  private readonly project = localStorage.getItem('azureDevOpsProject');
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient, private readonly configService: ConfigService) {}
 
   getOpenPullRequests(): Observable<PullRequest[]> {
-    const url = `https://dev.azure.com/${this.org}/${this.project}/_apis/git/pullrequests?searchCriteria.status=active&api-version=7.1`;
+    const url = `https://dev.azure.com/${this.configService.org}/${this.configService.project}/_apis/git/pullrequests?searchCriteria.status=active&api-version=7.1`;
     return this.http.get<{ value: PullRequest[] }>(url).pipe(
       map(response => response.value ?? []),
       switchMap(prs => (prs.length ? this.enrich(prs) : of([]))),
@@ -59,14 +58,14 @@ export class PrService {
   }
 
   private getPolicyStatus(projectId: string, pullRequestId: number): Observable<PolicyEvaluationRecord[]> {
-    const url = `https://dev.azure.com/${this.org}/${this.project}/_apis/policy/evaluations?artifactId=vstfs:///CodeReview/CodeReviewId/${projectId}/${pullRequestId}&api-version=7.1-preview`;
+    const url = `https://dev.azure.com/${this.configService.org}/${this.configService.project}/_apis/policy/evaluations?artifactId=vstfs:///CodeReview/CodeReviewId/${projectId}/${pullRequestId}&api-version=7.1-preview`;
     return this.http.get<{ value: PolicyEvaluationRecord[] }>(url).pipe(
       map(response => response.value || [])
     );
   }
 
   private getComments(pr: PullRequest): Observable<any[]> {
-    const url = `https://dev.azure.com/${this.org}/${this.project}/_apis/git/repositories/${pr.repository.id}/pullRequests/${pr.pullRequestId}/threads?api-version=7.1`;
+    const url = `https://dev.azure.com/${this.configService.org}/${this.configService.project}/_apis/git/repositories/${pr.repository.id}/pullRequests/${pr.pullRequestId}/threads?api-version=7.1`;
     return this.http.get<{ value: any[] }>(url).pipe(
       map(response => response.value.filter(thread => thread.pullRequestThreadContext && !thread.isDeleted) || [])
     );

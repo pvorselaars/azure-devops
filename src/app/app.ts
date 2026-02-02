@@ -4,6 +4,8 @@ import { NavigationEnd, provideRouter, Router, RouterOutlet, Routes } from '@ang
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PrOverview } from './components/pr-overview/pr-overview';
 import { filter } from 'rxjs';
+import { ConfigService } from './services/config.service';
+import { Settings } from "./components/settings/settings";
 
 export const routes: Routes = [
   {
@@ -35,23 +37,12 @@ export const appConfig: ApplicationConfig = {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ReactiveFormsModule],
+  imports: [RouterOutlet, ReactiveFormsModule, Settings],
   template: `
-    @if (configuring) {
-      <dialog open>
-        <form [formGroup]="configForm" (ngSubmit)="save()">
-          <h1>Please configure your Azure DevOps settings</h1>
-          <small>You can create a <a href="https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops" target="_blank">PAT</a>. Make sure it has at least "Code (Read)" and "Build (Read)" permissions.</small>
-          <fieldset>
-            <input type="text" formControlName="org" placeholder="Organization" />
-            <input type="text" formControlName="proj" placeholder="Project" />
-            <input type="password" formControlName="pat" placeholder="Personal Access Token" />
-            <button type="submit" [disabled]="configForm.invalid">Save</button>
-          </fieldset>
-        </form>
-      </dialog>
+    @if (configService.configuring) {
+      <app-settings />
     }
-    @if (token){
+    @if (configService.token !== ''){
       <nav>
         <span>{{title}}</span>
         <span title="Pull Request" (click)="nav('pull-requests')" style="cursor: pointer;">
@@ -83,23 +74,12 @@ export const appConfig: ApplicationConfig = {
   `
 })
 export class App {
-  protected token = localStorage.getItem('azureDevOpsToken');
-  protected configuring = !this.token;
-  protected configForm: FormGroup;
 
   protected title = '';
 
-  constructor(private readonly fb: FormBuilder, private readonly router: Router) {
-    const stored = localStorage.getItem('theme');
-    if (stored) {
-      document.documentElement.setAttribute('data-theme', stored);
-    }
-
-    this.configForm = this.fb.group({
-      org: [localStorage.getItem('azureDevOpsOrg') || '', Validators.required],
-      proj: [localStorage.getItem('azureDevOpsProject') || '', Validators.required],
-      pat: [localStorage.getItem('azureDevOpsToken') || '', Validators.required]
-    });
+  constructor(private readonly fb: FormBuilder, private readonly router: Router, protected readonly configService: ConfigService) {
+    this.configService.configuring = configService.token === '';
+    document.documentElement.setAttribute('data-theme', this.configService.theme);
 
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       let route = this.router.routerState.root;
@@ -112,17 +92,9 @@ export class App {
     this.router.navigate([path]);
   }
 
-  protected save(): void {
-    if (this.configForm.invalid) return;
-    const { pat, org, proj } = this.configForm.value;
-    localStorage.setItem('azureDevOpsToken', pat);
-    localStorage.setItem('azureDevOpsOrg', org);
-    localStorage.setItem('azureDevOpsProject', proj);
-    location.reload();
-  }
 
   protected reset(): void {
-    this.configuring = true;
+    this.configService.configuring = true;
   }
 
   protected toggleDarkMode(): void {
@@ -130,7 +102,7 @@ export class App {
     const current = root.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
+    this.configService.theme = next;
   }
 
 }
