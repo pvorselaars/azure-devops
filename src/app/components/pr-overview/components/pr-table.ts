@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { PullRequest } from '../../../../model/pr';
 import { MarkdownPipe } from "../../../pipes/markdown.pipe";
 import { AsyncPipe } from '@angular/common';
+import { ConfigService } from '../../../services/config.service';
 
 @Component({
   selector: 'app-pr-table',
@@ -68,7 +69,7 @@ import { AsyncPipe } from '@angular/common';
           <th (click)="toggleSort('passRate', 'number')">Policies</th>
       </thead>
       <tbody>
-        @for (pr of searchResults; track pr.pullRequestId) {
+        @for (pr of sortedSearchResults; track pr.pullRequestId) {
         <tr (click)="selected === pr ? selected = undefined : selected = pr"
             [class.selected]="selected === pr"
             [class.success]="pr.passRate === 1 && !pr.isDraft && pr.status !== 'completed'"
@@ -127,7 +128,7 @@ import { AsyncPipe } from '@angular/common';
                 @for (status of rejectedPolicies; track status.evaluationId) {
                   <li class="danger">{{ status.configuration.type.displayName }}</li>
                   @if (status.context?.buildDefinitionName) {
-                    <span class="danger"><a href="https://dev.azure.com/{{ org }}/{{ pr.repository.project.id }}/_build/results?buildId={{ status.context.buildId }}" target="_blank" rel="noopener">
+                    <span class="danger"><a href="https://dev.azure.com/{{ config.org }}/{{ pr.repository.project.id }}/_build/results?buildId={{ status.context.buildId }}" target="_blank" rel="noopener">
                       {{ status.context.buildDefinitionName }}: {{ status.context.buildOutputPreview!.jobName }} / {{ status.context.buildOutputPreview!.taskName }}:</a></span>
                     @for (error of status.context.buildOutputPreview!.errors; track error.message) {
                       <div class="danger">- {{ error.message }}</div>
@@ -155,13 +156,14 @@ import { AsyncPipe } from '@angular/common';
 })
 export class PrTable {
 
-  protected readonly org = localStorage.getItem('azureDevOpsOrg');
-
   @Input()
   pullRequests: PullRequest[] = [];
 
-  protected sortColumn: string = '';
+  constructor(protected readonly config: ConfigService) {}
+
+  protected sortColumn: string = 'creationDate';
   protected sortDirection: 1 | -1 = 1;
+  protected sortType: string = 'number';
 
   protected selected?: PullRequest;
 
@@ -178,6 +180,31 @@ export class PrTable {
     );
   }
 
+  protected get sortedSearchResults(): PullRequest[] {
+    const getValue = (obj: any, path: string) => {
+      if (!obj || !path) return undefined;
+      return path.split('.').reduce((o, key) => (o ? o[key] : undefined), obj);
+    };
+
+    return this.searchResults.sort((a, b) => {
+      const aVal = getValue(a, this.sortColumn);
+      const bVal = getValue(b, this.sortColumn);
+      if (this.sortType === 'string') {
+        const av = String(aVal ?? '');
+        const bv = String(bVal ?? '');
+        const cmp = av.localeCompare(bv, undefined, { sensitivity: 'base' });
+        if (cmp !== 0) return cmp * this.sortDirection;
+      } else if (this.sortType === 'number') {
+        const av = Number(aVal ?? 0);
+        const bv = Number(bVal ?? 0);
+        const diff = av - bv;
+        if (diff !== 0) return diff * this.sortDirection;
+      }
+
+      return (a.pullRequestId - b.pullRequestId) * this.sortDirection;
+    });
+  }
+
   protected toggleSort(column: string, type: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 1 ? -1 : 1;
@@ -185,37 +212,12 @@ export class PrTable {
       this.sortColumn = column;
       this.sortDirection = 1;
     }
-
-    const direction = this.sortDirection;
-
-    const getValue = (obj: any, path: string) => {
-      if (!obj || !path) return undefined;
-      return path.split('.').reduce((o, key) => (o ? o[key] : undefined), obj);
-    };
-
-    this.pullRequests = [...this.pullRequests].sort((a, b) => {
-      const aVal = getValue(a, column);
-      const bVal = getValue(b, column);
-
-      if (type === 'string') {
-        const av = String(aVal ?? '');
-        const bv = String(bVal ?? '');
-        const cmp = av.localeCompare(bv, undefined, { sensitivity: 'base' });
-        if (cmp !== 0) return cmp * direction;
-      } else if (type === 'number') {
-        const av = Number(aVal ?? 0);
-        const bv = Number(bVal ?? 0);
-        const diff = av - bv;
-        if (diff !== 0) return diff * direction;
-      }
-
-      return (a.pullRequestId - b.pullRequestId) * direction;
-    });
-  }
+    this.sortType = type;
+  };
 
   protected goto(event: Event, repository: { id: string; name: string, project: { id: string; name: string } }, pullRequestId: number): void {
     event.stopPropagation();
-    const url = `https://dev.azure.com/${this.org}/${encodeURIComponent(repository.project.name)}/_git/${repository.name}/pullrequest/${pullRequestId}`;
+    const url = `https://dev.azure.com/${this.config.org}/${encodeURIComponent(repository.project.name)}/_git/${repository.name}/pullrequest/${pullRequestId}`;
     const w = window.open(url, '_blank');
     if (w) w.opener = null;
   }
